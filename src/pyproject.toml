@@ -10,6 +10,9 @@ python = "^3.12"
 yt-dlp = "^2024.11.18"
 spotipy = "^2.24.0"
 google-cloud-storage = "^2.18.2"
+python-dotenv = "^1.0.1"
+ytmusicapi = "^1.8.2"
+functions-framework = "^3.8.2"
 
 
 [build-system]
