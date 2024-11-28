@@ -107,3 +107,5 @@ def main(request):
     for item in new_items:
         find_youtube_music_title(item)
     save_to_gcs()
+
+    return "OK"
