@@ -3,28 +3,35 @@ import spotipy
 import os
 from spotipy.oauth2 import SpotifyClientCredentials
 from dotenv import load_dotenv
-from yt_dlp import YoutubeDL
+from yt_dlp import YoutubeDL, Config
 from google.cloud import storage
 import functions_framework
 
 load_dotenv()
 auth_manager = SpotifyClientCredentials()
 
+
 spotify_client = sp = spotipy.Spotify(auth_manager=auth_manager)
+
 ydl_opts = {
-    "format": "bestaudio/best",
+    "outtmpl": "/tmp/%(title)s.%(ext)s",
+    "format": "bestaudio/best",  # Best audio quality
     "postprocessors": [
         {
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "0",
-        }
+            "key": "FFmpegExtractAudio",  # Extract audio
+            "preferredcodec": "mp3",  # Set output format to mp3
+            "preferredquality": "0",  # Best quality
+        },
+        {
+            "key": "EmbedThumbnail",  # Embed thumbnail
+        },
+        {
+            "key": "FFmpegMetadata",  # Embed metadata
+        },
     ],
-    "keepvideo": False,
-    "postprocessor_args": ["-metadata", "title=%(track)s"],
-    "embedmetadata": True,
-    "embedthumbnail": True,
-    "outtmpl": "/tmp/%(title)s.%(ext)s",
+    "parse_metadata": "title:%(track)s",  # Parse metadata
+    "noplaylist": True,  # Do not download playlists
+    "keepvideo": False,  # Do not keep video
 }
 yt_dl_client = YoutubeDL(ydl_opts)
 storage_client = storage.Client()
@@ -40,7 +47,7 @@ def get_new_playlist_items():
         list: A list of track names in the format "Artist - Track Name".
     """
     playlist_id = os.getenv("SPOTIFY_PLAYLIST_ID")
-    current_date = datetime.now().strftime("%Y-%m-%d")
+    current_date = "2024-11-29"  # datetime.now().strftime("%Y-%m-%d")
     limit = 100
     offset = 0
     new_tracks = []
@@ -101,11 +108,15 @@ def save_to_gcs():
             blob.upload_from_filename(f"/tmp/{file}")
 
 
-@functions_framework.http
+# @functions_framework.http
 def main(request):
     new_items = get_new_playlist_items()
+    print(new_items)
     for item in new_items:
         find_youtube_music_title(item)
     save_to_gcs()
 
     return "OK"
+
+
+main("f")
